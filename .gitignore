@@ -36,4 +36,4 @@ local.properties
 output/
 target/
 bin/
-
+logs/

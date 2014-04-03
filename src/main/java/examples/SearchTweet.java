@@ -1,5 +1,9 @@
-package twitter;
+package examples;
 
+import twitter.CommonUtils;
+import twitter.DataAccessUtils;
+import twitter.Tweet;
+import twitter.TwitterAPISettings;
 import twitter4j.*;
 
 import java.io.IOException;

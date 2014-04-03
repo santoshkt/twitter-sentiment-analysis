@@ -1,4 +1,4 @@
-package twitter;
+package examples;
 
 /*
  * Copyright 2007 Yusuke Yamamoto
@@ -16,9 +16,11 @@ package twitter;
  * limitations under the License.
  */
 
+import twitter.CommonUtils;
 import twitter4j.RateLimitStatus;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
+
 import java.util.Map;
 
 public final class GetRateLimitStatus {
@@ -32,7 +34,7 @@ public final class GetRateLimitStatus {
 					.getRateLimitStatus();
 			for (String endpoint : rateLimitStatus.keySet()) {
 				RateLimitStatus status = rateLimitStatus.get(endpoint);
-				if (endpoint.equals("/search/tweets")) {
+				if (endpoint.equals("/friends/ids")) {
 					System.out.println("Endpoint: " + endpoint);
 					System.out.println(" Limit: " + status.getLimit());
 					System.out.println(" Remaining: " + status.getRemaining());

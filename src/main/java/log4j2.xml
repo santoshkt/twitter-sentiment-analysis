@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="WARN">
+	<appenders>
+		<Console name="Console_out" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{ISO8601} [%-5level] %F:%M:%L - %msg%n" />
+		</Console>
+		<RollingFile name="MyFile" fileName="logs/app.log"
+			filePattern="logs/app-%d{yyyy-MM-dd_hh-mm}-%i.log">
+			<PatternLayout pattern="%d{ISO8601} [%-5level] %F:%M:%L - %msg%n" />
+			<Policies>
+				<OnStartupTriggeringPolicy />
+			</Policies>
+			<DefaultRolloverStrategy max="20" />
+		</RollingFile>
+	</appenders>
+
+	<loggers>
+		<root level="trace">
+			<appender-ref ref="Console_out" />
+			<appender-ref ref="MyFile" />
+		</root>
+	</loggers>
+</configuration>

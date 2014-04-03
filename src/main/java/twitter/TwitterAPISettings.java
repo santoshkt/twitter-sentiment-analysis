@@ -4,13 +4,14 @@ public class TwitterAPISettings {
 	
 	// Settings
 	
-	public static String INPUT_KEYWORD = "legend bala";
-	public static int MAX_QUERIES = 1000;
+	public static String INITIAL_USER_ID = "tsantoo";
+	public static String INPUT_KEYWORD = "knowafest";
+	public static int MAX_QUERIES = 5;
 	
 	// Constants
 	// Following are created with a fake twitter account
 	// email: gmu@mailnator
-	// username: gmucs796
+	// username: gmucs795
 	// password: gmuspring2014
 	
 	public final static String browserConsumerKey= "84YiIKa7sLmOxQGwpGTWZIoIz";
