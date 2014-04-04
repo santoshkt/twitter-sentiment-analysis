@@ -20,6 +20,8 @@ import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.User;
 
+import com.google.common.collect.Sets;
+
 public class Crawler {
 
 	public static Twitter twitter;
@@ -142,111 +144,108 @@ class TwitterSocialGraph {
 			// We have to find who is following him back so that we know
 			// the friends of the subjectUser.
 
-			// For each person subject is following
-			HashSet<User> subjectHs = followsMap.get(subjectUser);
-			int friendCount = 0;
-			for (User user : subjectHs) {
-				logger.trace("Finding details about: " + user.toString());
-				cursor = -1;
-
-				IDs followsFollowingIDs;
-
-				// Get that users that person is following
-				rateLimitCheck("rateLimitFriends");
+			long cursor2 = -1;
+			IDs followedUserIDs = null;
+			HashSet<Long> subjectFollowersHs = new HashSet<Long>();
+			do {
+				rateLimitCheck("rateLimitFollowers");
 
 				try {
+					// Every one subject is following
+					followedUserIDs = twitter.getFollowersIDs(subject, cursor2);
+					rateLimitFollowers--;
 
-					if (user.isProtected()) {
-						logger.trace(user.getScreenName() + "is protected.");
-						continue;
-					}
-					followsFollowingIDs = twitter.getFriendsIDs(user.getId(),
-							cursor);
-					rateLimitFriends--;
 				} catch (TwitterException te) {
 					if (te.getMessage().contains("Rate limit exceeded")) {
 						te.printStackTrace();
 						waitForRateLimit15();
 						continue;
+					} else {
+						te.printStackTrace();
+						continue;
 					}
-
-					te.printStackTrace();
-					continue;
 				}
 
-				HashSet<Long> hs = new HashSet<Long>();
-				for (Long followsFollowingId : followsFollowingIDs.getIDs()) {
-					hs.add(followsFollowingId);
+				for (Long subjectFollowed : followedUserIDs.getIDs()) {
+					subjectFollowersHs.add(subjectFollowed);
 				}
 
-				if (hs.contains(subjectUser.getId())) {
-					// The subject's follower is following him back.
-					// Get user objects of the subject's follower's followers
-					// and store them in
-					// followsMap
-					// We will do this later, but for now, just keep all of them
-					// in a HashSet
-					
-					friendsHs.add(subjectUser.getId());
-					friendCount++;
-					if(TwitterAPISettings.MAX_FRIENDS_COUNT > 0 && friendCount>=TwitterAPISettings.MAX_FRIENDS_COUNT){
-						logger.trace("Reached Max friends count.");
-						break;
-					}else{
-						logger.trace("friendCount: "+friendCount);
-					}
+			} while ((cursor = followingUserList.getNextCursor()) != 0);
 
-				}
+			HashSet<Long> subjectFollowingHs = new HashSet<Long>();
+			for (User user : followsMap.get(subjectUser)) {
+				subjectFollowingHs.add(user.getId());
 			}
+
+			friendsHs.addAll(subjectFollowingHs);
+			friendsHs.retainAll(subjectFollowersHs);
+			logger.trace("Friends: " + friendsHs.toString());
 
 			// Find the user objects of 2nd level users and add them to
 			// followsMap
 			int querySize = 0;
 			String query = new String();
+			User friendUser = null;
+			int friendCount = 0;
 			for (Long friendID : friendsHs) {
-				User friendUser = getFriendUserObj(subjectUser, friendID);
-				if (querySize <= 100) {
-					query += friendUser.getScreenName() + ",";
-				} else {
+				
+				// friendUser cannot be null.
+				friendUser = getFriendUserObj(subjectUser, friendID);
+				if(friendUser.isProtected()){
+					continue;
+				}
 
-					ResponseList<User> userObjs = null;
+				// Find friends of this friendUser so that you can get his
+				// tweets.
+				IDs friendFollowingUserIds = null;
 
-					try {
+				rateLimitCheck("rateLimitFriendsList");
 
-						rateLimitCheck("rateLimitUserLookup");
+				// We don't place a loop before this because, we don't
+				// want to know about people who follow too many people.
 
-						userObjs = twitter.lookupUsers(query.split(","));
+				try {
+					// Every one subject is following
+					friendFollowingUserIds = twitter.getFriendsIDs(friendID,
+							cursor);
+					rateLimitFriendsList--;
 
-					} catch (TwitterException te) {
-						if (te.getMessage().contains("Rate limit exceeded")) {
-							te.printStackTrace();
-							waitForRateLimit15();
-							continue;
-						}
+				} catch (TwitterException te) {
+					if (te.getMessage().contains("Rate limit exceeded")) {
+						te.printStackTrace();
+						waitForRateLimit15();
+						continue;
+					} else {
 						te.printStackTrace();
 						continue;
 					}
-
-					HashSet<User> hs = new HashSet<User>();
-
-					for (User user : userObjs) {
-						hs.add(user);
-						logger.trace(subject + " is following "
-								+ user.toString());
-
-					}
-
-					if (followsMap.get(friendUser) == null) {
-						followsMap.put(friendUser, hs);
+				}
+				
+				for (Long friendFollowerID : friendFollowingUserIds.getIDs()) {
+					if (querySize <= 100) {
+						query += friendFollowerID + ",";
+						querySize++;
 					} else {
-						HashSet<User> hs2 = new HashSet<User>();
-						hs2 = followsMap.get(friendUser);
-						hs2.addAll(hs);
-						followsMap.put(friendUser, hs2);
+						if (!doLookUp(query, friendUser)) {
+							continue;
+						}
+						query = "";
+						querySize = 0;
 					}
+				}
 
+				if (!query.isEmpty()) {
+					doLookUp(query, friendUser);
 					query = "";
 					querySize = 0;
+				}
+				
+				friendCount++;
+				if(TwitterAPISettings.MAX_FRIENDS_COUNT > 0 && friendCount>=TwitterAPISettings.MAX_FRIENDS_COUNT){
+					logger.trace("Reached Max friends count.");
+					break;
+				}else{
+					logger.trace("friendCount: "+friendCount);
 				}
 
 			}
@@ -276,12 +275,11 @@ class TwitterSocialGraph {
 			for (CrawledStatus status : statuses) {
 				logger.trace(status.toString());
 			}
-			
+
 			// Write followsMap, friendsHs and statuses to files.
 			DataAccessUtils.writeToFile(followsMap);
 			DataAccessUtils.writeToFile(subject, friendsHs);
 			DataAccessUtils.writeToFile(statuses);
-			
 
 		} catch (TwitterException te) {
 			te.printStackTrace();
@@ -290,8 +288,53 @@ class TwitterSocialGraph {
 		}
 	}
 
-	private static User getFriendUserObj(User subjectUser, Long friendUser) {
+	private static boolean doLookUp(String query, User friendUser)
+			throws InterruptedException {
 
+		logger.entry(query, friendUser.toString());
+
+		ResponseList<User> userObjs = null;
+
+		try {
+
+			rateLimitCheck("rateLimitUserLookup");
+			logger.trace("Look up with: " + query);
+			userObjs = twitter.lookupUsers(query.split(","));
+
+		} catch (TwitterException te) {
+			if (te.getMessage().contains("Rate limit exceeded")) {
+				te.printStackTrace();
+				waitForRateLimit15();
+				return false;
+			}
+			te.printStackTrace();
+			return false;
+		}
+
+		HashSet<User> hs = new HashSet<User>();
+
+		for (User user : userObjs) {
+			hs.add(user);
+			logger.trace(friendUser.getScreenName() + " is following "
+					+ user.toString());
+
+		}
+
+		if (followsMap.get(friendUser) == null) {
+			followsMap.put(friendUser, hs);
+		} else {
+			HashSet<User> hs2 = new HashSet<User>();
+			hs2 = followsMap.get(friendUser);
+			hs2.addAll(hs);
+			followsMap.put(friendUser, hs2);
+		}
+
+		return true;
+
+	}
+
+	private static User getFriendUserObj(User subjectUser, Long friendUser) {
+		logger.entry();
 		HashSet<User> hs = followsMap.get(subjectUser);
 
 		for (User user : hs) {
@@ -349,9 +392,8 @@ class TwitterSocialGraph {
 				break;
 			default:
 				logger.error("Unknown rate limit type. This may cause some error later.");
-				
-			}
 
+			}
 
 		} catch (Exception te) {
 			te.printStackTrace();
@@ -392,7 +434,7 @@ class TwitterSocialGraph {
 
 	private static void waitForRateLimit15() throws InterruptedException {
 		logger.entry("Waiting for 900000");
-		for (int i = 9; i >=0 ; i--) {
+		for (int i = 9; i >= 0; i--) {
 			logger.entry("Sleeping for 90000, will sleep for " + i
 					+ " more times.");
 			Thread.sleep(90000);
@@ -417,7 +459,7 @@ class TwitterSocialGraph {
 	private static ArrayList<CrawledStatus> getUserTweets(
 			HashSet<Long> userIDList) throws TwitterException,
 			InterruptedException {
-		logger.entry();
+		logger.entry("Extracting status tweets of " +userIDList.size() + " users.");
 		List<Status> statuses;
 		ArrayList<CrawledStatus> statusList = new ArrayList<CrawledStatus>();
 
@@ -440,9 +482,10 @@ class TwitterSocialGraph {
 						continue;
 					}
 					te.printStackTrace();
-					continue;
+					logger.trace("May be a protected user.");
+					break;
 				}
-				System.out.println("Crawling @" + user + " user timeline.");
+				logger.trace("Crawling @" + user + " user timeline.");
 				for (Status status : statuses) {
 					CrawledStatus cs = new CrawledStatus(status.getUser()
 							.getId(), status.toString());
