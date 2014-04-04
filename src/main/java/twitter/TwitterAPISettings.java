@@ -6,7 +6,7 @@ public class TwitterAPISettings {
 	
 	public static String INITIAL_USER_ID = "tsantoo";
 	public static String INPUT_KEYWORD = "knowafest";
-	public static int MAX_FRIENDS_COUNT = 10;
+	public static int MAX_QUERY_PER_FRIENDS_COUNT = 2;
 	public static int MAX_QUERIES = 5;
 	
 	// Constants
@@ -23,4 +23,9 @@ public class TwitterAPISettings {
 	public final static int RATELIMIT15 = 15;
 	public final static int RATELIMIT30 = 30;
 	public final static int RATELIMIT180 = 180;
+	public final static int RATELIMIT60 = 60;
+	public final static int RATELIMIT300 = 300;
+	
+	public final static int USERIDLOOKUP = 0;
+	public final static int SCREENAMELOOKUP = 1;
 }

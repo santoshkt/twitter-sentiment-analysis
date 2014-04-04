@@ -2,8 +2,10 @@ package twitter;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,15 +67,28 @@ public class DataAccessUtils {
 
 			User user = entry.getKey();
 			HashSet<User> hs = entry.getValue();
-			out.write("key:" + user.toString() + "\n");
+			out.write("key:" + cleanText(user.toString()) + "\n");
 
 			for (User fuser : hs) {
-				out.write("follows:" + fuser.toString() + "\n");
+				out.write("follows:" + cleanText(fuser.toString()) + "\n");
 			}
 		}
 
 		out.close();
 		logger.exit("Writing to file complete.");
+		
+		// Also, try to write the object directly.
+		
+		new File("output").mkdirs();
+		File outputObjFile = new File("output/" + "followsMap.ser");
+		if (!outputFile.exists()) {
+			outputFile.createNewFile();
+		}
+        FileOutputStream f = new FileOutputStream(outputObjFile);
+        ObjectOutputStream s = new ObjectOutputStream(f);
+        s.writeObject(outputObjFile);
+        s.close();
+		
 	}
 
 	public static void writeToFile(Long subject, HashSet<Long> friendsHs)
@@ -117,12 +132,19 @@ public class DataAccessUtils {
 		out = new BufferedWriter(fileStream);
 
 		for (CrawledStatus status : statuses) {
-			out.write(status.toString() + "\n");
+			out.write(cleanText(status.toString()) + "\n");
 		}
 
 		out.close();
 
 		logger.exit("Writing to file complete.");
+	}
+	
+	private static String cleanText(String text) {
+		text = text.replace("\n", "\\n");
+		text = text.replace("\t", "\\t");
+		text = text.replace("\"", "");
+		return text;
 	}
 
 }

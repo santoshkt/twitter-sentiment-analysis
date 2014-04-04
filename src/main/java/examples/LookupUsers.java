@@ -15,23 +15,30 @@ public final class LookupUsers {
      */
     public static void main(String[] args) {
         
-    	String LOOKUPKEY = "abhisemweb";
+    	String LOOKUPKEY = "30849088,270771330";
+    	String[] LookKeySplit = LOOKUPKEY.split(",");
+    	int n = LookKeySplit.length;
+    	long[] keys = new long[n];
+    	int i = 0;
+    	for(String key : LookKeySplit){
+    		keys[i] = Long.parseLong(key);
+    		i++;
+    	}
     	
         try {
         	Twitter twitter = CommonUtils.getTwitterInstance();
-            ResponseList<User> users = twitter.lookupUsers(LOOKUPKEY.split(","));
+            ResponseList<User> users = twitter.lookupUsers(keys);
             for (User user : users) {
                 if (user.getStatus() != null) {
                 	
                 	System.out.println(user.toString());
                 	
-                    System.out.println("@" + user.getScreenName() + " - " + user.getStatus().getText());
                 } else {
                     // the user is protected
-                    System.out.println("@" + user.getScreenName());
+                    System.out.println("Protected User: @" + user.getScreenName());
                 }
             }
-            System.out.println("Successfully looked up users [" + LOOKUPKEY + "].");
+            System.out.println("Successfully looked up users: " + keys.toString());
             System.exit(0);
         } catch (TwitterException te) {
             te.printStackTrace();

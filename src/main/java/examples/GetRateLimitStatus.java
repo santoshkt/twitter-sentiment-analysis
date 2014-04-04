@@ -34,7 +34,7 @@ public final class GetRateLimitStatus {
 					.getRateLimitStatus();
 			for (String endpoint : rateLimitStatus.keySet()) {
 				RateLimitStatus status = rateLimitStatus.get(endpoint);
-				if (endpoint.equals("/friends/ids")) {
+				if (endpoint.equals("/users/lookup")) {
 					System.out.println("Endpoint: " + endpoint);
 					System.out.println(" Limit: " + status.getLimit());
 					System.out.println(" Remaining: " + status.getRemaining());
