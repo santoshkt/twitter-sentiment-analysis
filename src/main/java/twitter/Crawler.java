@@ -52,12 +52,12 @@ class TwitterSocialGraph {
 			.getFormatterLogger(TwitterSocialGraph.class.getName());
 
 	public static Twitter twitter;
-	private static int rateLimitFollowers = TwitterAPISettings.RATELIMIT15;
-	private static int rateLimitFriends = TwitterAPISettings.RATELIMIT15;
-	private static int rateLimitFollowersList = TwitterAPISettings.RATELIMIT30;
-	private static int rateLimitFriendsList = TwitterAPISettings.RATELIMIT30;
-	private static int rateLimitUserTimeline = TwitterAPISettings.RATELIMIT300;
-	private static int rateLimitUserLookup = TwitterAPISettings.RATELIMIT60;
+	private static int rateLimitFollowers;
+	private static int rateLimitFriends;
+	private static int rateLimitFollowersList;
+	private static int rateLimitFriendsList;
+	private static int rateLimitUserTimeline;
+	private static int rateLimitUserLookup;
 
 	// For each user, a HashSet of the Users he follows.
 	private static HashMap<User, HashSet<User>> followsMap = new HashMap<User, HashSet<User>>();
@@ -72,6 +72,10 @@ class TwitterSocialGraph {
 	private static HashSet<Long> friendsHs = new HashSet<Long>();
 	private static HashSet<Long> userIDList = new HashSet<Long>();
 	private static ArrayList<CrawledStatus> statuses;
+	
+	public TwitterSocialGraph(){
+		resetRateLimits();
+	}
 
 	public static void crawl() throws InterruptedException, IOException,
 			TwitterException {
@@ -126,7 +130,7 @@ class TwitterSocialGraph {
 
 				HashSet<User> hs = new HashSet<User>();
 				for (User user : followingUserList) {
-					if (user.getFollowersCount() > 1000) {
+					if (user.getFollowersCount() > TwitterAPISettings.CELEBRITY_FOLLOWER_COUNT) {
 						logger.trace("Celebrity account. Ignore. "
 								+ user.toString());
 					} else {
@@ -185,7 +189,7 @@ class TwitterSocialGraph {
 
 			friendsHs.addAll(subjectFollowingHs);
 			friendsHs.retainAll(subjectFollowersHs);
-			logger.trace("Friends: " + friendsHs.toString());
+			logger.trace("Friends: "+ friendsHs.size()+ " List: " + friendsHs.toString());
 
 			// Find the user objects of 2nd level users and add them to
 			// followsMap
@@ -508,8 +512,8 @@ class TwitterSocialGraph {
 		rateLimitFollowersList = TwitterAPISettings.RATELIMIT30;
 		rateLimitFriends = TwitterAPISettings.RATELIMIT15;
 		rateLimitFollowers = TwitterAPISettings.RATELIMIT15;
-		rateLimitUserTimeline = TwitterAPISettings.RATELIMIT180;
-		rateLimitUserLookup = TwitterAPISettings.RATELIMIT15;
+		rateLimitUserTimeline = TwitterAPISettings.RATELIMIT300;
+		rateLimitUserLookup = TwitterAPISettings.RATELIMIT60;
 		logger.exit();
 	}
 

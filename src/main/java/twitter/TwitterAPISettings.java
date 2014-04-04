@@ -8,6 +8,7 @@ public class TwitterAPISettings {
 	public static String INPUT_KEYWORD = "knowafest";
 	public static int MAX_QUERY_PER_FRIENDS_COUNT = 2;
 	public static int MAX_QUERIES = 5;
+	public static int CELEBRITY_FOLLOWER_COUNT = 1000;
 	
 	// Constants
 	// Following are created with a fake twitter account
