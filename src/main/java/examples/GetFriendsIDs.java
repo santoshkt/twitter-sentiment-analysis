@@ -18,9 +18,12 @@ package examples;
 
 import twitter.CommonUtils;
 import twitter4j.IDs;
+import twitter4j.PagableResponseList;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
+import twitter4j.TwitterObjectFactory;
+import twitter4j.User;
 
 /**
  * Lists friends' ids
@@ -37,14 +40,14 @@ public final class GetFriendsIDs {
         try {
             Twitter twitter = CommonUtils.getTwitterInstance();
             long cursor = -1;
-            IDs ids;
+            PagableResponseList<User> userList;
             System.out.println("Listing following ids.");
             do {
-                ids = twitter.getFriendsIDs("abhisemweb", cursor);
-                for (long id : ids.getIDs()) {
-                    System.out.println(id);
+            	userList = twitter.getFriendsList("tsantoo", cursor);
+                for (User user : userList) {
+                    System.out.println(user.toString());
                 }
-            } while ((cursor = ids.getNextCursor()) != 0);
+            } while ((cursor = userList.getNextCursor()) != 0);
             System.exit(0);
         } catch (TwitterException te) {
             te.printStackTrace();
