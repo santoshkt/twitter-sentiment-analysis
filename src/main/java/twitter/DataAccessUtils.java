@@ -77,18 +77,6 @@ public class DataAccessUtils {
 		out.close();
 		logger.exit("Writing to file complete.");
 		
-		// Also, try to write the object directly.
-		
-		new File("output").mkdirs();
-		File outputObjFile = new File("output/" + "followsMap.ser");
-		if (!outputFile.exists()) {
-			outputFile.createNewFile();
-		}
-        FileOutputStream f = new FileOutputStream(outputObjFile);
-        ObjectOutputStream s = new ObjectOutputStream(f);
-        s.writeObject(outputObjFile);
-        s.close();
-		
 	}
 
 	public static void writeToFile(Long subject, HashSet<Long> friendsHs)
@@ -141,8 +129,8 @@ public class DataAccessUtils {
 	}
 	
 	private static String cleanText(String text) {
-		text = text.replace("\n", "\\n");
-		text = text.replace("\t", "\\t");
+		text = text.replace("\n", "");
+		text = text.replace("\t", " ");
 		text = text.replace("\"", "");
 		return text;
 	}

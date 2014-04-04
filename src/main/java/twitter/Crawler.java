@@ -61,6 +61,12 @@ class TwitterSocialGraph {
 
 	// For each user, a HashSet of the Users he follows.
 	private static HashMap<User, HashSet<User>> followsMap = new HashMap<User, HashSet<User>>();
+	// TODO: Following two data structures will need to be use and code needs to be changed accordingly.
+	// Will do that in future. It will help us eventually output. This will help to reduce queries. 
+	// followsHs (userid1 follows userid2)
+	// friendsHs (userid1 friends userid2) <-- Bi-directional
+	// userHs (userid, details)
+	// statuses (userid, status)
 	private static HashMap<Long, HashSet<Long>> followsIdMap = new HashMap<Long, HashSet<Long>>();
 	private static HashSet<User> userHs = new HashSet<User>();
 	private static HashSet<Long> friendsHs = new HashSet<Long>();
